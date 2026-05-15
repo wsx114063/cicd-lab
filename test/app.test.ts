@@ -22,7 +22,7 @@ describe('Fastify app', () => {
     });
 
     expect(response.statusCode).toBe(200);
-    expect(response.json().message).toBe('This expectation is intentionally wrong');
+    expect(response.json().message).toBe('CI/CD Lab Fastify app is running');
     await app.close();
   });
 });

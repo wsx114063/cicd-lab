@@ -1,0 +1,109 @@
+name: CI P14922007
+
+on:
+  push:
+    branches:
+      - '**'
+
+permissions:
+  contents: read
+
+jobs:
+  typecheck:
+    name: TypeScript typecheck
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run TypeScript typecheck
+        run: npm run typecheck
+
+  prettier:
+    name: Prettier check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Prettier check
+        run: npm run format:check
+
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests with JUnit report
+        run: >
+          npm test -- --reporter=default --reporter=junit
+          --outputFile.junit=./test-results/vitest-junit.xml
+
+      - name: Publish test results to job summary
+        if: always()
+        shell: bash
+        run: |
+          report="test-results/vitest-junit.xml"
+
+          {
+            echo "## Vitest test results"
+            echo
+
+            if [[ -f "$report" ]]; then
+              tests="$(sed -n 's/.*tests="\([0-9][0-9]*\)".*/\1/p' "$report" | head -n 1)"
+              failures="$(sed -n 's/.*failures="\([0-9][0-9]*\)".*/\1/p' "$report" | head -n 1)"
+              errors="$(sed -n 's/.*errors="\([0-9][0-9]*\)".*/\1/p' "$report" | head -n 1)"
+              skipped="$(sed -n 's/.*skipped="\([0-9][0-9]*\)".*/\1/p' "$report" | head -n 1)"
+
+              echo "| Metric | Count |"
+              echo "| --- | ---: |"
+              echo "| Tests | ${tests:-0} |"
+              echo "| Failures | ${failures:-0} |"
+              echo "| Errors | ${errors:-0} |"
+              echo "| Skipped | ${skipped:-0} |"
+              echo
+              echo "JUnit report: \`$report\`"
+            else
+              echo "JUnit report was not generated. Check the test step logs."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload JUnit test report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vitest-junit-report
+          path: test-results/vitest-junit.xml
+          if-no-files-found: warn

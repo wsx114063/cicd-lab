@@ -107,19 +107,3 @@ jobs:
               echo "JUnit report was not generated. Check the test step logs."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
-
-      - name: Upload JUnit test report
-        if: always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: vitest-junit-report
-          path: test-results/vitest-junit.xml
-          if-no-files-found: warn
-
-      - name: Upload Vitest coverage report
-        if: always()
-        uses: actions/upload-artifact@v5
-        with:
-          name: vitest-coverage-report
-          path: coverage
-          if-no-files-found: warn

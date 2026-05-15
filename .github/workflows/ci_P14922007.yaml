@@ -15,10 +15,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -35,10 +35,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -55,10 +55,10 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
           cache: npm
@@ -68,8 +68,16 @@ jobs:
 
       - name: Run tests with JUnit report
         run: >
-          npm test -- --reporter=default --reporter=junit
+          npm test -- --coverage.enabled true
+          --reporter=default --reporter=junit
           --outputFile.junit=./test-results/vitest-junit.xml
+
+      - name: Publish Vitest coverage report
+        if: always()
+        uses: davelosert/vitest-coverage-report-action@v2
+        with:
+          comment-on: none
+          file-coverage-mode: all
 
       - name: Publish test results to job summary
         if: always()
@@ -102,8 +110,16 @@ jobs:
 
       - name: Upload JUnit test report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: vitest-junit-report
           path: test-results/vitest-junit.xml
+          if-no-files-found: warn
+
+      - name: Upload Vitest coverage report
+        if: always()
+        uses: actions/upload-artifact@v5
+        with:
+          name: vitest-coverage-report
+          path: coverage
           if-no-files-found: warn
